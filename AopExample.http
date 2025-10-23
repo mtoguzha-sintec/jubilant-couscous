@@ -1,0 +1,6 @@
+@AopExample_HostAddress = http://localhost:5054
+
+GET {{AopExample_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

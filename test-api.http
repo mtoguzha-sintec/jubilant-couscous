@@ -1,0 +1,89 @@
+# Test the AOP Example API - Auto-Registration with Controllers
+# Demonstrates [RequireAdmin] at class level, method level, and on services
+
+### Test 1: Public endpoint (should work without admin header)
+GET http://localhost:5054/api/user/public
+
+###
+
+### Test 2: Admin endpoint WITHOUT admin header (should fail with 401)
+GET http://localhost:5054/api/user/all
+
+###
+
+### Test 3: Admin endpoint WITH admin header (should succeed)
+GET http://localhost:5054/api/user/all
+X-User-Role: Admin
+
+###
+
+### Test 4: Get all products (public access)
+GET http://localhost:5054/api/product
+
+###
+
+### Test 5: Delete product WITHOUT admin header (should fail with 401)
+DELETE http://localhost:5054/api/product/123
+
+###
+
+### Test 6: Delete product WITH admin header (should succeed)
+DELETE http://localhost:5054/api/product/123
+X-User-Role: Admin
+
+###
+
+### Test 7: Controller with [RequireAdmin] - Get settings WITHOUT header (should fail)
+GET http://localhost:5054/api/admin/settings
+
+###
+
+### Test 8: Controller with [RequireAdmin] - Get settings WITH header (should succeed)
+GET http://localhost:5054/api/admin/settings
+X-User-Role: Admin
+
+###
+
+### Test 9: Controller with [RequireAdmin] - Get logs WITH header
+GET http://localhost:5054/api/admin/logs
+X-User-Role: Admin
+
+###
+
+### Test 10: Controller with [RequireAdmin] - Reset system WITH header
+POST http://localhost:5054/api/admin/reset
+X-User-Role: Admin
+
+###
+
+### Test 11: ReportController - Public report (no auth required)
+GET http://localhost:5054/api/report/public
+
+###
+
+### Test 12: ReportController - Download report (no auth required)
+GET http://localhost:5054/api/report/download/123
+
+###
+
+### Test 13: ReportController - Detailed report WITHOUT admin (should fail)
+GET http://localhost:5054/api/report/detailed
+
+###
+
+### Test 14: ReportController - Detailed report WITH admin (should succeed)
+GET http://localhost:5054/api/report/detailed
+X-User-Role: Admin
+
+###
+
+### Test 15: ReportController - Financial report WITHOUT admin (should fail)
+GET http://localhost:5054/api/report/financial
+
+###
+
+### Test 16: ReportController - Financial report WITH admin (should succeed)
+GET http://localhost:5054/api/report/financial
+X-User-Role: Admin
+
+###
