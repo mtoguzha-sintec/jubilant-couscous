@@ -47,39 +47,57 @@ builder.Services.AddSwaggerGen(c =>
 });
 builder.Services.AddHttpContextAccessor(); // Required for interceptor to access HttpContext
 
-// Configure Autofac
+// ════════════════════════════════════════════════════════════════
+// AOP CONCEPT #5: WEAVING (Runtime Weaving with Castle DynamicProxy)
+// ════════════════════════════════════════════════════════════════
+// Configure Autofac with Castle DynamicProxy for runtime weaving
+// WEAVING is the process of applying aspects to target code.
+// This happens at RUNTIME - dynamic proxies are created that wrap classes
+// and intercept method calls to apply the aspect logic.
+// ════════════════════════════════════════════════════════════════
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
 {
-    // Register the interceptor
+    // Register the aspect (AdminRoleInterceptor) in the IoC container
     containerBuilder.RegisterType<AdminRoleInterceptor>()
         .AsSelf()
         .InstancePerLifetimeScope();
 
     var assembly = typeof(Program).Assembly;
     
-    // Auto-register services with RequireAdmin attribute (interface interception)
+    // ═════ WEAVING for Services (Interface-based proxying) ═════
+    // AOP CONCEPT #4: POINTCUT (Expression Matching)
+    // This Where clause is a POINTCUT EXPRESSION that identifies which types
+    // should have the aspect applied (types with [RequireAdmin] attribute).
     containerBuilder.RegisterAssemblyTypes(assembly)
         .Where(t => !t.IsAbstract && 
                     !typeof(ControllerBase).IsAssignableFrom(t) && // Exclude controllers here
+                    // POINTCUT: Match types/methods with RequireAdminAttribute
                     (t.GetMethods().Any(m => m.GetCustomAttributes(typeof(AopExample.Attributes.RequireAdminAttribute), true).Any()) ||
                      t.GetCustomAttributes(typeof(AopExample.Attributes.RequireAdminAttribute), true).Any()))
         .AsImplementedInterfaces()
-        .EnableInterfaceInterceptors()
-        .InterceptedBy(typeof(AdminRoleInterceptor))
+        .EnableInterfaceInterceptors()  // ← WEAVING: Create interface proxies at runtime
+        .InterceptedBy(typeof(AdminRoleInterceptor))  // ← Apply the aspect
         .InstancePerLifetimeScope();
 
-    // Auto-register controllers with RequireAdmin attribute (class interception)
+    // ═════ WEAVING for Controllers (Class-based proxying) ═════
     // Controllers need class interceptors because they're concrete classes, not interfaces
+    // Castle DynamicProxy creates a subclass that overrides virtual methods
     containerBuilder.RegisterAssemblyTypes(assembly)
         .Where(t => typeof(ControllerBase).IsAssignableFrom(t) &&
+                    // POINTCUT: Match controllers/methods with RequireAdminAttribute
                     (t.GetMethods().Any(m => m.GetCustomAttributes(typeof(AopExample.Attributes.RequireAdminAttribute), true).Any()) ||
                      t.GetCustomAttributes(typeof(AopExample.Attributes.RequireAdminAttribute), true).Any()))
-        .EnableClassInterceptors()
-        .InterceptedBy(typeof(AdminRoleInterceptor))
+        .EnableClassInterceptors()  // ← WEAVING: Create class proxies at runtime
+        .InterceptedBy(typeof(AdminRoleInterceptor))  // ← Apply the aspect
         .InstancePerLifetimeScope()
         .PropertiesAutowired();
 });
+// ════════════════════════════════════════════════════════════════
+// End of WEAVING configuration
+// At runtime, when methods are called, the proxy intercepts them
+// and delegates to the AdminRoleInterceptor's Intercept() method
+// ════════════════════════════════════════════════════════════════
 
 var app = builder.Build();
 

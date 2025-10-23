@@ -6,6 +6,13 @@ namespace AopExample.Controllers;
 /// <summary>
 /// Admin-only controller - all methods require admin role via AOP
 /// The [RequireAdmin] attribute at class level protects ALL methods
+/// 
+/// ════════════════════════════════════════════════════════════════
+/// AOP CONCEPT #2: JOIN POINT (Class-level Example)
+/// ════════════════════════════════════════════════════════════════
+/// When [RequireAdmin] is applied at the CLASS level, ALL methods in this controller
+/// become JOIN POINTS for the AdminRoleInterceptor aspect.
+/// This demonstrates how AOP can apply cross-cutting concerns at different granularities.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
